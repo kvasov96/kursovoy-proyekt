@@ -1,12 +1,27 @@
+#define _CRT_SECURE_NO_DEPRECATE
+
+#include <stdlib.h>
 #include <stdio.h>
 #include <locale.h>
 
-int data() //создание файла с данными
+int data(); //создание файла с данными о командах
+int edit(); //редактирование файла
+int search(int final[25][2], int N); //поиск команд, имеющих более N очков 
+int statistics(int final[25][2]); //вычисление статистики по командам
+int final(int tabl[25][5]); //создание файла с итоговой таблицей результатов
+
+data()
 {
 	char* filename = "data.txt";
 	FILE* fp = fopen(filename, "w");
+	if (!fp)
+	{
+		puts("Файл не обнаружен!");
+		system("pause");
+		exit(EXIT_SUCCESS);
+	}
 	int tabl[25][5];
-	if (fp)
+	if (fp) //заполнение таблицы значениями
 	{
 		for (int i = 0; i < 25; ++i)
 		{
@@ -26,9 +41,15 @@ int data() //создание файла с данными
 	return 0;
 }
 
-int edit() //редактирование файла с данными
+edit() //редактирование файла с данными
 {
 	FILE* fp1 = fopen("data.txt", "a+t");
+	if (!fp1)
+	{
+		puts("Файл не обнаружен!");
+		system("pause");
+		exit(EXIT_SUCCESS);
+	}
 	int row, col, new;
 	printf("Редактирование\nВведите номер команды (1 - 25): ");
 	scanf("%i", &row);
@@ -37,13 +58,19 @@ int edit() //редактирование файла с данными
 	printf("\nВведите новое значение ячейки: ");
 	scanf("%i", &new);
 	int tabl[25][5];
-	for (int i = 0; i < 25; ++i)
+	for (int i = 0; i < 25; ++i) //запись данных из файла в массив
 	{
 		fscanf(fp1, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
 	}
 	fclose(fp1);
 	FILE* fp2 = fopen("data.txt", "w");
-	if (fp2)
+	if (!fp2)
+	{
+		puts("Файл не обнаружен!");
+		system("pause");
+		exit(EXIT_SUCCESS);
+	}
+	if (fp2) //запись изменённых данных из массива в файл
 	{
 		for (int i = 0; i < 25; ++i)
 		{
@@ -67,74 +94,56 @@ int edit() //редактирование файла с данными
 	return 0;
 }
 
-int search(int final[25][2], char teams[25][10]) //поиск команд, имеющих более N очков
+int search(int final[25][2], int N)
 {
-	int N, teamnum;
 	int cycle = 0;
-	puts("\nПоиск команд, имеющих более N очков: ");
-	scanf("%i", &N);
-	printf("\nМесто| № команды|      Итог|Имя Команды");
 	for (int count = 0; count < 25; ++count)
 	{
 		if (final[count][0] > N)
 		{
 			++cycle;
-			teamnum = final[count][1] - 1;
-			printf("\n%5i|%10i|%10i|%s", cycle, final[count][1], final[count][0], teams[teamnum]);
 		}
 	}
-	return 0;
+	return cycle;
 }
 
-int statistics(int final[25][2], char teams[25][10]) //статистика по командам
+int statistics(int final[25][2], int step)
 {
 	int sum = 0;
 	int min = final[0][0];
 	int minpos;
 	for (int count = 0; count < 25; ++count)
 	{
-		sum += final[count][0];
+		sum += final[count][0]; //вычисление общей суммы очков
 		if (final[count][0] < min)
 		{
-			min = final[count][0];
-			minpos = final[count][1];
+			min = final[count][0]; //вычисление команды с минимальным количеством очков
+			minpos = final[count][1] - 1; // позиция команды с минимальным количеством очков
 		}
 	}
-	int avg = (int)((float)sum / 25);
-	printf("\n\nСтатистика\nСуммарное кол-во очков по всем командам: %i\nСреднее кол-во очков по всем командам: %i\nМинимальное количество очков: %i у %s", sum, avg, min, teams[minpos - 1]);
-	return 0;
+	int avg = (int)((float)sum / 25); //вычисление среднего результата по командам
+	if (step == 0) return sum;
+	if (step == 1) return min;
+	if (step == 2) return minpos;
+	if (step == 3) return avg;
 }
 
-int task() //показ таблицы, показ итогов и поиск
+int finaltabl(int tabl[25][5])
 {
-	char* filename = "data.txt";
-	char* teamsname = "teams.txt";
-	int tabl[25][5];
-	char teams[25][10];
+	FILE* fpfinal = fopen("final.txt", "w");
+	if (!fpfinal)
+	{
+		puts("Файл не обнаружен!");
+		system("pause");
+		exit(EXIT_SUCCESS);
+	}
+	int sort_a, sort_b;
 	int final[25][2];
-	int sort_a, sort_b, teamnum;
-	FILE* fp = fopen(filename, "r");
-	FILE* fp1 = fopen(teamsname, "r");
-	for (int count = 0; count < 25; ++count)
-	{
-		fscanf(fp1, "%s\n", &teams[count]);
-	}
-	for (int i = 0; i < 25; ++i)
-	{
-		fscanf(fp, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
-	}
-	fclose(fp);
-	for (int count = 0; count < 25; ++count)
+	for (int count = 0; count < 25; ++count) //вычисление итоговых очков по формуле и занесение их в таблицу
 	{
 		final[count][0] = 3 * tabl[count][0] + 3 * tabl[count][3] - tabl[count][1] + 2 * tabl[count][2];
 		final[count][1] = tabl[count][4];
 	}
-	printf("\n №|    Забито| Пропущено|     Штраф|    Ворота|Имя Команды\n");
-	for (int i = 0; i < 25; ++i)
-	{
-		printf("%2i|%10i|%10i|%10i|%10i|%s\n", tabl[i][4], tabl[i][0], tabl[i][1], tabl[i][2], tabl[i][3], teams[i]);
-	}
-	printf("\nРезультат = 3 * забитые шайбы + 3 * броски по воротам + 2 * шайбы в штрафные минуты - пропущенные шайбы\n\nМесто| № команды|      Итог|Имя Команды");
 	for (int count = 0; count < 25; ++count) //сортировка по наибольшему количеству очков
 	{
 		for (int count2 = 25 - 2; count2 >= count; --count2)
@@ -149,26 +158,130 @@ int task() //показ таблицы, показ итогов и поиск
 				final[count2 + 1][1] = sort_b;
 			}
 		}
-		teamnum = final[count][1] - 1;
-		printf("\n%5i|%10i|%10i|%s", count + 1, final[count][1], final[count][0], teams[teamnum]);
 	}
-	printf("\n\n");
-	search(final, teams);
-	statistics(final, teams);
+	if (fpfinal) //запись данных в файл
+	{
+		for (int count = 0; count < 25; ++count)
+		{
+			fprintf(fpfinal, "%i %i\n", final[count][0], final[count][1]);
+		}
+	}
+	fclose(fpfinal);
 	return 0;
 }
 
 void main()
 {
 	setlocale(LC_ALL, "RUS");
-	puts("1 - Запуск программы\n2 - Перезаписать файл данных\n3 - Изменить данные");
+	FILE* fp = fopen("data.txt", "r"); //открытие файлов с таблицей результатов и названиями команд
+	if (!fp)
+	{
+		puts("Файл не обнаружен!");
+		system("pause");
+		exit(EXIT_SUCCESS);
+	}
+	FILE* fpteams = fopen("teams.txt", "r");
+	if (!fpteams)
+	{
+		puts("Файл не обнаружен!");
+		system("pause");
+		exit(EXIT_SUCCESS);
+	}
+	int tabl[25][5];
+	char teams[25][11];
+	int final[25][2];
 	int cycle = 0;
+	int operation;
+	int N;
+	for (int count = 0; count < 25; ++count) //чтение данных из файлов
+	{
+		fscanf(fpteams, "%s\n", &teams[count]);
+	}
+	fclose(fpteams);
+	for (int i = 0; i < 25; ++i)
+	{
+		fscanf(fp, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
+	}
+	fclose(fp);
+	puts("1 - Вывод таблицы результатов\n2 - Вывод итоговой таблицы\n3 - Поиск команд, имеющих более N очков\n4 - Статистика по командам\n5 - Перезапись данных\n6 - Редактирование данных\n");
 	while (cycle == 0)
 	{
-		int operation;
 		scanf("%i", &operation);
-		if (operation == 1) task();
-		else if (operation == 2) data();
-		else if (operation == 3) edit();
+		if (operation == 1) //показ таблицы результатов
+		{
+			printf("\n №|    Забито| Пропущено|     Штраф|    Ворота|Имя Команды\n");
+			for (int i = 0; i < 25; ++i)
+			{
+				printf("%2i|%10i|%10i|%10i|%10i|%s\n", tabl[i][4], tabl[i][0], tabl[i][1], tabl[i][2], tabl[i][3], teams[i]);
+			}
+			printf("\n");
+		}
+		if (operation == 2) //показ таблицы с итоговыми очками
+		{
+			FILE* fpfinal = fopen("final.txt", "r");
+			if (!fpfinal)
+			{
+				puts("Файл не обнаружен!");
+				system("pause");
+				exit(EXIT_SUCCESS);
+			}
+			finaltabl(tabl);
+			for (int count = 0; count < 25; ++count)
+			{
+				fscanf(fpfinal, "%i %i\n", &final[count][0], &final[count][1]);
+			}
+			fclose(fpfinal);
+			printf("\nРезультат = 3 * забитые шайбы + 3 * броски по воротам + 2 * шайбы в штрафные минуты - пропущенные шайбы\n\nМесто| № команды|      Итог|Имя Команды");
+			for (int count = 0; count < 25; ++count)
+			{
+				printf("\n%5i|%10i|%10i|%s", count + 1, final[count][1], final[count][0], teams[final[count][1] - 1]);
+			}
+			printf("\n\n");
+		}
+		if (operation == 3) //поиск команд
+		{
+			puts("\nПоиск команд, имеющих более N очков: ");
+			scanf("%i", &N);
+			printf("\nМесто| № команды|      Итог|Имя Команды");
+			for (int count = 0; count < search(final, N); ++count)
+			{
+				printf("\n%5i|%10i|%10i|%s", count + 1, final[count][1], final[count][0], teams[final[count][1] - 1]);
+			}
+			printf("\n\n");
+		}
+		if (operation == 4) //статистика по командам
+		{
+			printf("\n\nСтатистика\nСуммарное кол-во очков по всем командам: %i\nСреднее кол-во очков по всем командам: %i\nМинимальное количество очков: %i у %s\n\n", statistics(final, 0), statistics(final, 3), statistics(final, 1), teams[statistics(final, 2)]);
+		}
+		else if (operation == 5) //перезапись данных
+		{
+			FILE* fp = fopen("data.txt", "r");
+			if (!fp)
+			{
+				puts("Файл не обнаружен!");
+				system("pause");
+				exit(EXIT_SUCCESS);
+			}
+			data();
+			for (int i = 0; i < 25; ++i)
+			{
+				fscanf(fp, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
+			}
+		}
+		else if (operation == 6) //редактирование данных
+		{
+			FILE* fp = fopen("data.txt", "r");
+			if (!fp)
+			{
+				puts("Файл не обнаружен!");
+				system("pause");
+				exit(EXIT_SUCCESS);
+			}
+			edit();
+			for (int i = 0; i < 25; ++i)
+			{
+				fscanf(fp, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
+			}
+		}
 	}
 }
