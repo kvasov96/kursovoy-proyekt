@@ -4,25 +4,24 @@
 #include <stdio.h>
 #include <locale.h>
 
-int data(); //создание файла с данными о командах
-int edit(); //редактирование файла
+int data(int count1, int count2, int mode); //создание файла с данными о командах
+int edit(int count1, int count2, int mode); //редактирование файла
 int search(int final[25][2], int N, int count1, int count2); //поиск команд, имеющих более N очков 
 int statistics(int final[25][2], int count); //вычисление статистики по командам
-int final(int tabl[25][5]); //создание файла с итоговой таблицей результатов
+int finaltabl(int tabl[25][5], int count1, int count2, int mode); //создание файла с итоговой таблицей результатов
 
-data()
+data(int count1, int count2, int mode)
 {
-	char* filename = "data.txt";
-	FILE* fp = fopen(filename, "w");
-	if (!fp)
-	{
-		puts("Файл не обнаружен!");
-		system("pause");
-		exit(EXIT_SUCCESS);
-	}
 	int tabl[25][5];
-	if (fp) //заполнение таблицы значениями
+	if (mode == 1)
 	{
+		FILE* fp = fopen("data.txt", "w");
+		if (!fp)
+		{
+			puts("Файл не обнаружен!");
+			system("pause");
+			exit(EXIT_SUCCESS);
+		}
 		for (int i = 0; i < 25; ++i)
 		{
 			for (int j = 0; j < 5; ++j)
@@ -35,13 +34,27 @@ data()
 				if (j == 4) fprintf(fp, "\n");
 			}
 		}
+		fclose(fp);
+		return 0;
 	}
-	fclose(fp);
-	puts("Данные перезаписаны!");
-	return 0;
+	if (mode == 2)
+	{
+		FILE* fp1 = fopen("data.txt", "a+t");
+		if (!fp1)
+		{
+			puts("Файл не обнаружен!");
+			system("pause");
+			exit(EXIT_SUCCESS);
+		}
+		for (int i = 0; i < 25; ++i)
+		{
+			fscanf(fp1, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
+		}
+		return tabl[count1][count2];
+	}
 }
 
-edit() //редактирование файла с данными
+edit(int count1, int count2, int mode) //редактирование файла с данными
 {
 	FILE* fp1 = fopen("data.txt", "a+t");
 	if (!fp1)
@@ -63,35 +76,34 @@ edit() //редактирование файла с данными
 		fscanf(fp1, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
 	}
 	fclose(fp1);
-	FILE* fp2 = fopen("data.txt", "w");
-	if (!fp2)
+	tabl[row - 1][col] = new;
+	if (mode == 1)
 	{
-		puts("Файл не обнаружен!");
-		system("pause");
-		exit(EXIT_SUCCESS);
-	}
-	if (fp2) //запись изменённых данных из массива в файл
-	{
-		for (int i = 0; i < 25; ++i)
+		FILE* fp2 = fopen("data.txt", "w");
+		if (!fp2)
 		{
-			for (int j = 0; j < 5; ++j)
+			puts("Файл не обнаружен!");
+			system("pause");
+			exit(EXIT_SUCCESS);
+		}
+		if (fp2) //запись изменённых данных из массива в файл
+		{
+			for (int i = 0; i < 25; ++i)
 			{
-				if (i == row - 1 && j == col)
+				for (int j = 0; j < 5; ++j)
 				{
-					tabl[i][j] = new;
+					fprintf(fp2, "%i ", tabl[i][j]);
+					if (j == 4) fprintf(fp2, "\n");
 				}
-				else
-				{
-					tabl[i][j] = tabl[i][j];
-				}
-				fprintf(fp2, "%i ", tabl[i][j]);
-				if (j == 4) fprintf(fp2, "\n");
 			}
 		}
+		fclose(fp2);
+		return 0;
 	}
-	fclose(fp2);
-	puts("Данные перезаписаны!");
-	return 0;
+	if (mode == 2)
+	{
+		return tabl[count1][count2];
+	}
 }
 
 int search(int final[25][2], int N, int count1, int count2)
@@ -136,15 +148,8 @@ int statistics(int final[25][2], int count)
 	return stats[count];
 }
 
-int finaltabl(int tabl[25][5])
+int finaltabl(int tabl[25][5], int count1, int count2, int mode)
 {
-	FILE* fpfinal = fopen("final.txt", "w");
-	if (!fpfinal)
-	{
-		puts("Файл не обнаружен!");
-		system("pause");
-		exit(EXIT_SUCCESS);
-	}
 	int sort_a, sort_b;
 	int final[25][2];
 	for (int count = 0; count < 25; ++count) //вычисление итоговых очков по формуле и занесение их в таблицу
@@ -167,27 +172,33 @@ int finaltabl(int tabl[25][5])
 			}
 		}
 	}
-	if (fpfinal) //запись данных в файл
+	if (mode == 1)
 	{
-		for (int count = 0; count < 25; ++count)
+		FILE* fpfinal = fopen("final.txt", "w");
+		if (!fpfinal)
 		{
-			fprintf(fpfinal, "%i %i\n", final[count][0], final[count][1]);
+			puts("Файл не обнаружен!");
+			system("pause");
+			exit(EXIT_SUCCESS);
 		}
+		if (fpfinal) //запись данных в файл
+		{
+			for (int count = 0; count < 25; ++count)
+			{
+				fprintf(fpfinal, "%i %i\n", final[count][0], final[count][1]);
+			}
+		}
+		fclose(fpfinal);
 	}
-	fclose(fpfinal);
-	return 0;
+	if (mode == 2)
+	{
+		return final[count1][count2];
+	}
 }
 
 void main()
 {
 	setlocale(LC_ALL, "RUS");
-	FILE* fp = fopen("data.txt", "r"); //открытие файлов с таблицей результатов и названиями команд
-	if (!fp)
-	{
-		puts("Файл не обнаружен!");
-		system("pause");
-		exit(EXIT_SUCCESS);
-	}
 	FILE* fpteams = fopen("teams.txt", "r");
 	if (!fpteams)
 	{
@@ -198,32 +209,28 @@ void main()
 	int tabl[25][5];
 	char teams[25][11];
 	int final[25][2];
-	int cycle = 0;
-	int operation;
-	int N;
+	for (int count1 = 0; count1 < 25; ++count1)
+	{
+		for (int count2 = 0; count2 < 5; ++count2)
+		{
+			tabl[count1][count2] = data(count1, count2, 2);
+		}
+	}
+	for (int count1 = 0; count1 < 25; ++count1)
+	{
+		for (int count2 = 0; count2 < 2; ++count2)
+		{
+			final[count1][count2] = finaltabl(tabl, count1, count2, 2);
+		}
+	}
 	for (int count = 0; count < 25; ++count) //чтение данных из файлов
 	{
 		fscanf(fpteams, "%s\n", &teams[count]);
 	}
 	fclose(fpteams);
-	for (int i = 0; i < 25; ++i)
-	{
-		fscanf(fp, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
-	}
-	fclose(fp);
-	FILE* fpfinal = fopen("final.txt", "r");
-	if (!fpfinal)
-	{
-		puts("Файл не обнаружен!");
-		system("pause");
-		exit(EXIT_SUCCESS);
-	}
-	finaltabl(tabl);
-	for (int count = 0; count < 25; ++count)
-	{
-		fscanf(fpfinal, "%i %i\n", &final[count][0], &final[count][1]);
-	}
-	fclose(fpfinal);
+	int cycle = 0;
+	int operation;
+	int N;
 	puts("1 - Вывод таблицы результатов\n2 - Вывод итоговой таблицы\n3 - Поиск команд, имеющих более N очков\n4 - Статистика по командам\n5 - Перезапись данных\n6 - Редактирование данных\n");
 	while (cycle == 0)
 	{
@@ -273,28 +280,41 @@ void main()
 				system("pause");
 				exit(EXIT_SUCCESS);
 			}
-			data();
-			for (int i = 0; i < 25; ++i)
+			data(0, 0, 1);
+			for (int count1 = 0; count1 < 25; ++count1)
 			{
-				fscanf(fp, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
+				for (int count2 = 0; count2 < 2; ++count2)
+				{
+					tabl[count1][count2] = data(count1, count2, 2);
+				}
 			}
-			finaltabl(tabl);
+			for (int count1 = 0; count1 < 25; ++count1)
+			{
+				for (int count2 = 0; count2 < 2; ++count2)
+				{
+					final[count1][count2] = finaltabl(tabl, count1, count2, 2);
+				}
+			}
+			puts("Данные перезаписаны!");
 		}
 		else if (operation == 6) //редактирование данных
 		{
-			FILE* fp = fopen("data.txt", "r");
-			if (!fp)
+			edit(0, 0, 1);
+			for (int count1 = 0; count1 < 25; ++count1)
 			{
-				puts("Файл не обнаружен!");
-				system("pause");
-				exit(EXIT_SUCCESS);
+				for (int count2 = 0; count2 < 2; ++count2)
+				{
+					tabl[count1][count2] = edit(count1, count2, 2);
+				}
 			}
-			edit();
-			for (int i = 0; i < 25; ++i)
+			for (int count1 = 0; count1 < 25; ++count1)
 			{
-				fscanf(fp, "%i %i %i %i %i \n", &tabl[i][0], &tabl[i][1], &tabl[i][2], &tabl[i][3], &tabl[i][4]);
+				for (int count2 = 0; count2 < 2; ++count2)
+				{
+					final[count1][count2] = finaltabl(tabl, count1, count2, 2);
+				}
 			}
-			finaltabl(tabl);
+			puts("Данные перезаписаны!");
 		}
 	}
 }
